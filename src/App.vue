@@ -31,7 +31,16 @@ async function randomTrip(){let next=place.value;while(next.code===place.value.c
 async function play(s:Station){if(current.value?.id===s.id&&playerStatus.value==='playing'){engine.pause();return}current.value=s;queue.value=filteredStations.value;playerStatus.value='loading';saveStation('history',s).then(refreshSaved).catch(()=>{});engine.setVolume(volume.value);engine.setMuted(muted.value);await engine.play(s)}
 async function togglePlay(){if(!current.value)return;if(playerStatus.value==='playing')engine.pause();else if(playerStatus.value==='paused')await engine.resume();else await engine.play(current.value)}
 function adjacent(delta:number){if(!queue.value.length)return;const i=Math.max(0,queue.value.findIndex(s=>s.id===current.value?.id));play(queue.value[(i+delta+queue.value.length)%queue.value.length])}
-async function toggleFavorite(s:Station){if(favoriteIds.value.has(s.id)){await removeStation('favorites',s.id);flash('已取消收藏')}else{await saveStation('favorites',s);flash('已加入收藏')}await refreshSaved()}
+function toggleFavorite(s:Station){
+ const wasFavorite=favoriteIds.value.has(s.id)
+ favorites.value=wasFavorite?favorites.value.filter(item=>item.id!==s.id):[s,...favorites.value.filter(item=>item.id!==s.id)]
+ flash(wasFavorite?'已取消收藏':'已加入收藏')
+ const persist=wasFavorite?removeStation('favorites',s.id):saveStation('favorites',s)
+ persist.catch(()=>{
+  favorites.value=wasFavorite?[s,...favorites.value.filter(item=>item.id!==s.id)]:favorites.value.filter(item=>item.id!==s.id)
+  flash('收藏保存失败，请检查浏览器存储权限')
+ })
+}
 function doSearch(){if(searchTimer)clearTimeout(searchTimer);const q=query.value.trim();if(!q){searchResults.value=[];searchOpen.value=false;return}searchOpen.value=true;searchTimer=window.setTimeout(async()=>{const p=findPlace(q);if(p){searchResults.value=[];searching.value=false;return}searching.value=true;try{searchResults.value=await radioApi.search(q)}catch(e){if((e as Error).name!=='AbortError')searchResults.value=[]}finally{searching.value=false}},350)}
 async function choosePlaceSearch(){const p=findPlace(query.value);if(p){searchOpen.value=false;query.value='';await selectPlace(p)}}
 function selectSearchStation(s:Station){searchOpen.value=false;query.value='';stations.value=searchResults.value;play(s);mobilePanel.value=true}
@@ -76,14 +85,14 @@ onBeforeUnmount(()=>{engine.destroy();if(sleepInterval)clearInterval(sleepInterv
     <article v-else v-for="s in filteredStations" :key="s.id" :class="['station-card',{playing:current?.id===s.id}]">
      <button class="logo" @click="play(s)" :aria-label="`播放 ${s.name}`"><img v-if="s.logo" :src="s.logo" loading="lazy" @error="($event.target as HTMLImageElement).style.display='none'"/><Radio v-else :size="22"/><span><Pause v-if="current?.id===s.id&&playerStatus==='playing'"/><Play v-else/></span></button>
      <div class="station-info"><h3>{{s.name}}</h3><p><span v-if="s.region">{{s.region}} · </span>{{s.languages[0]||'未知语言'}}<span v-if="s.bitrate"> · {{s.bitrate}} kbps</span></p><div><em v-for="x in s.tags.slice(0,2)" :key="x">{{x}}</em><em v-if="!s.hasReliableGeo" class="muted-tag">位置未提供</em></div></div>
-     <button class="heart" @click="toggleFavorite(s)" :aria-label="favoriteIds.has(s.id)?'取消收藏':'收藏'"><Heart :fill="favoriteIds.has(s.id)?'currentColor':'none'"/></button>
+     <button :class="['heart',{favorite:favoriteIds.has(s.id)}]" @click.stop="toggleFavorite(s)" :aria-label="favoriteIds.has(s.id)?'取消收藏':'收藏'"><Heart :fill="favoriteIds.has(s.id)?'currentColor':'none'"/></button>
     </article>
     <button v-if="hasMore&&!loading&&!loadError" class="load-more" @click="load(false)">加载更多电台</button>
    </div>
   </aside>
  </section>
  <footer class="player">
-  <div class="now"><div class="cover"><img v-if="current?.logo" :src="current.logo"/><Radio v-else/></div><div><b>{{current?.name||'世界正在发声'}}</b><span :class="playerStatus">{{statusText}}</span></div><button v-if="current" class="heart" @click="toggleFavorite(current)"><Heart :fill="favoriteIds.has(current.id)?'currentColor':'none'"/></button></div>
+  <div class="now"><div class="cover"><img v-if="current?.logo" :src="current.logo"/><Radio v-else/></div><div><b>{{current?.name||'世界正在发声'}}</b><span :class="playerStatus">{{statusText}}</span></div><button v-if="current" :class="['heart',{favorite:favoriteIds.has(current.id)}]" @click.stop="toggleFavorite(current)"><Heart :fill="favoriteIds.has(current.id)?'currentColor':'none'"/></button></div>
   <div class="transport"><button @click="adjacent(-1)" :disabled="!current"><SkipBack/></button><button class="play-main" @click="togglePlay" :disabled="!current"><Pause v-if="playerStatus==='playing'"/><span v-else-if="playerStatus==='loading'" class="spinner"></span><Play v-else fill="currentColor"/></button><button @click="adjacent(1)" :disabled="!current"><SkipForward/></button></div>
   <div class="player-tools"><button @click="muted=!muted"><VolumeX v-if="muted||volume===0"/><Volume2 v-else/></button><input v-model.number="volume" type="range" min="0" max="1" step="0.01" aria-label="音量"/><div class="timer-wrap"><button><Timer/> <span>{{sleepLabel()}}</span></button><div class="timer-menu"><button v-for="m in [15,30,60]" :key="m" @click="setSleep(m)">{{m}} 分钟</button><button @click="setSleep(0)">取消定时</button></div></div></div>
  </footer>
