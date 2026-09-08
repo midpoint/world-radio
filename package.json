@@ -1,0 +1,35 @@
+{
+  "name": "radio",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -p tsconfig.app.json --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "vue-tsc -p tsconfig.app.json --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "globe.gl": "^2.46.2",
+    "hls.js": "^1.7.2",
+    "i18n-iso-countries": "^7.14.0",
+    "idb": "^8.0.3",
+    "lucide-vue-next": "^0.577.0",
+    "pinia": "^4.0.3",
+    "three": "^0.186.0",
+    "topojson-client": "^3.1.0",
+    "vue": "^3.5.42",
+    "world-atlas": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.4",
+    "@types/topojson-client": "^3.1.5",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.2",
+    "vue-tsc": "^3.3.11"
+  }
+}
