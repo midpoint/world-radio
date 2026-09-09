@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -p tsconfig.app.json --noEmit && vite build",
-    "preview": "vite preview --host 0.0.0.0",
-    "typecheck": "vue-tsc -p tsconfig.app.json --noEmit"
+    "preview": "npm run build && wrangler dev",
+    "typecheck": "vue-tsc -p tsconfig.app.json --noEmit",
+    "deploy": "npm run build && wrangler deploy"
   },
   "keywords": [],
   "author": "",
@@ -25,11 +26,13 @@
     "world-atlas": "^2.0.2"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.54.6",
     "@types/three": "^0.185.4",
     "@types/topojson-client": "^3.1.5",
     "@vitejs/plugin-vue": "^6.0.8",
     "typescript": "^5.9.3",
     "vite": "^8.2.2",
-    "vue-tsc": "^3.3.11"
+    "vue-tsc": "^3.3.11",
+    "wrangler": "^4.130.0"
   }
 }
