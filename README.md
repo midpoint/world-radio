@@ -4,6 +4,19 @@
 
 项目采用纯前端架构，无需注册、后端服务或付费 API Key。
 
+在线体验：<https://world-radio.pages.dev>
+
+## 部署
+
+推送到 `main` 分支会自动触发 Cloudflare Pages 构建并发布（构建命令 `npm run build`，输出目录 `dist`，Node 22）。
+
+本地重新部署到 Pages：
+
+```bash
+npm run build
+npx wrangler pages deploy dist --project-name world-radio
+```
+
 ## 功能特性
 
 - 交互式 3D 地球：支持鼠标与触摸旋转、缩放、国家点击和镜头平滑定位
